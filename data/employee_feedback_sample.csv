@@ -1,0 +1,11 @@
+Employee_ID,Age,Department,Job_Role,Salary,Years_At_Company,Overtime,Job_Satisfaction,Work_Life_Balance,Promotion,Manager_Support,Salary_Satisfaction,Workload,Feedback,Attrition
+EMP001,24,IT,Developer,35000,1.5,Yes,2,2,No,2,2,High,High workload and low salary,Yes
+EMP002,29,HR,Recruiter,42000,3.0,No,4,4,Yes,4,4,Medium,Good work environment,No
+EMP003,26,Finance,Analyst,38000,2.0,Yes,3,3,No,3,3,High,Need better promotion opportunities,Yes
+EMP004,31,IT,Tester,46000,5.0,No,5,4,Yes,5,4,Low,Satisfied with role,No
+EMP005,27,Sales,Executive,33000,1.0,Yes,2,2,No,2,2,High,Work pressure is high,Yes
+EMP006,35,IT,Developer,60000,7.0,No,5,5,Yes,5,5,Low,Happy with career growth,No
+EMP007,30,HR,Manager,55000,6.0,No,4,4,Yes,4,4,Medium,Good support,No
+EMP008,25,Sales,Executive,32000,1.2,Yes,2,2,No,2,2,High,Long hours and pressure,Yes
+EMP009,28,Finance,Analyst,44000,3.5,No,4,4,No,4,4,Medium,Needs promotion clarity,No
+EMP010,33,IT,Support,40000,4.0,Yes,3,3,No,3,3,High,Workload needs improvement,Yes

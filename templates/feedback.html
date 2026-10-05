@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block content %}
+<h2 class="mb-4">Employee Feedback Form</h2>
+<form method="post" class="row g-3">{% csrf_token %}
+<div class="col-md-6"><label class="form-label">Employee ID</label><input name="employee_id" class="form-control" required></div>
+<div class="col-md-6"><label class="form-label">Department</label><input name="department" class="form-control" required></div>
+<div class="col-md-6"><label class="form-label">Job Role</label><input name="job_role" class="form-control" required></div>
+<div class="col-md-3"><label class="form-label">Age</label><input name="age" type="number" class="form-control" required></div>
+<div class="col-md-3"><label class="form-label">Years at Company</label><input name="years_at_company" type="number" step="0.1" class="form-control" required></div>
+<div class="col-md-4"><label class="form-label">Salary Satisfaction (1-5)</label><input name="salary_satisfaction" type="number" min="1" max="5" class="form-control" required></div>
+<div class="col-md-4"><label class="form-label">Job Satisfaction (1-5)</label><input name="job_satisfaction" type="number" min="1" max="5" class="form-control" required></div>
+<div class="col-md-4"><label class="form-label">Manager Support (1-5)</label><input name="manager_support" type="number" min="1" max="5" class="form-control" required></div>
+<div class="col-md-6"><label class="form-label">Workload</label><select name="workload" class="form-select"><option>Low</option><option>Medium</option><option>High</option></select></div>
+<div class="col-md-6"><label class="form-label">Work-Life Balance (1-5)</label><input name="work_life_balance" type="number" min="1" max="5" class="form-control" required></div>
+<div class="col-12"><label><input type="checkbox" name="promotion"> Received recent promotion</label></div>
+<div class="col-12"><label class="form-label">Feedback / Reason</label><textarea name="feedback" class="form-control" rows="4"></textarea></div>
+<div class="col-12"><button class="btn btn-primary">Submit Feedback</button></div>
+</form>
+{% endblock %}
