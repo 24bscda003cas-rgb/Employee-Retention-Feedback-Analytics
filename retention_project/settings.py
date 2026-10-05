@@ -1,12 +1,22 @@
 from pathlib import Path
+import os
+import dj_database_url
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = "django-insecure-employee-retention-project"
 
-DEBUG = True
+# --------------------------------------------------
+# SECURITY
+# --------------------------------------------------
 
-ALLOWED_HOSTS = [ 
+SECRET_KEY = os.getenv(
+    "SECRET_KEY",
+    "django-insecure-employee-retention-project"
+)
+
+DEBUG = os.getenv("DEBUG", "True").lower() == "true"
+
+ALLOWED_HOSTS = [
     "employee-retention-feedback-analytics.onrender.com",
     "localhost",
     "127.0.0.1",
@@ -83,14 +93,17 @@ WSGI_APPLICATION = "retention_project.wsgi.application"
 # --------------------------------------------------
 # DATABASE
 # --------------------------------------------------
-# PostgreSQL will be connected later.
-# For now Django uses SQLite so the backend can run.
+# Local:
+#   Uses SQLite when DATABASE_URL is not available.
+#
+# Render:
+#   Uses PostgreSQL from DATABASE_URL.
 
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
-    }
+    "default": dj_database_url.config(
+        default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
+        conn_max_age=600,
+    )
 }
 
 
@@ -144,6 +157,8 @@ USE_TZ = True
 # --------------------------------------------------
 
 STATIC_URL = "static/"
+
+STATIC_ROOT = BASE_DIR / "staticfiles"
 
 
 # --------------------------------------------------
