@@ -6,7 +6,11 @@ SECRET_KEY = "django-insecure-employee-retention-project"
 
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [ 
+    "employee-retention-feedback-analytics.onrender.com",
+    "localhost",
+    "127.0.0.1",
+]
 
 
 # --------------------------------------------------
