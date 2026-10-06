@@ -5,7 +5,7 @@ from django.core.management.base import BaseCommand
 
 
 class Command(BaseCommand):
-    help = "Create the initial admin user"
+    help = "Create or reset the initial admin user"
 
     def handle(self, *args, **options):
         username = os.getenv("ADMIN_USERNAME", "Atchaya@")
@@ -29,9 +29,14 @@ class Command(BaseCommand):
             },
         )
 
+        # Always update admin details and password
+        user.email = email
+        user.is_staff = True
+        user.is_superuser = True
+        user.set_password(password)
+        user.save()
+
         if created:
-            user.set_password(password)
-            user.save()
             self.stdout.write(
                 self.style.SUCCESS(
                     f"Admin user '{username}' created successfully."
@@ -39,7 +44,7 @@ class Command(BaseCommand):
             )
         else:
             self.stdout.write(
-                self.style.WARNING(
-                    f"Admin user '{username}' already exists."
+                self.style.SUCCESS(
+                    f"Admin user '{username}' password reset successfully."
                 )
             )
