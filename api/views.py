@@ -5,7 +5,6 @@ import joblib
 import pandas as pd
 
 from django.conf import settings
-from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -30,6 +29,10 @@ def get_ml_model():
     return joblib.load(model_path)
 
 
+# =========================================================
+# CREATE ML INPUT
+# =========================================================
+
 def create_ml_input(data):
     return pd.DataFrame([{
         "Age": int(data["age"]),
@@ -47,12 +50,19 @@ def create_ml_input(data):
     }])
 
 
+# =========================================================
+# GENERATE ML PREDICTION
+# =========================================================
+
 def generate_prediction(model, ml_input):
+
     prediction = model.predict(ml_input)[0]
 
     probability = model.predict_proba(ml_input)[0][1] * 100
 
-    prediction_label = "Yes" if int(prediction) == 1 else "No"
+    prediction_label = (
+        "Yes" if int(prediction) == 1 else "No"
+    )
 
     if probability < 34:
         risk = "Low"
@@ -61,7 +71,11 @@ def generate_prediction(model, ml_input):
     else:
         risk = "High"
 
-    return prediction_label, round(probability, 2), risk
+    return (
+        prediction_label,
+        round(probability, 2),
+        risk
+    )
 
 
 # =========================================================
@@ -81,11 +95,16 @@ def login_user(request):
         )
 
     try:
+
         data = json.loads(request.body)
 
         username = data.get("username", "").strip()
         password = data.get("password", "")
         role = data.get("role", "Employee")
+
+        # -------------------------------------------------
+        # VALIDATION
+        # -------------------------------------------------
 
         if not username or not password:
             return JsonResponse(
@@ -96,12 +115,14 @@ def login_user(request):
                 status=400
             )
 
-        user = authenticate(
-            username=username,
-            password=password
-        )
+        # -------------------------------------------------
+        # FIND USER DIRECTLY
+        # -------------------------------------------------
 
-        if user is None:
+        try:
+            user = User.objects.get(username=username)
+        except User.DoesNotExist:
+
             return JsonResponse(
                 {
                     "success": False,
@@ -111,12 +132,41 @@ def login_user(request):
             )
 
         # -------------------------------------------------
+        # CHECK PASSWORD DIRECTLY
+        # -------------------------------------------------
+
+        if not user.check_password(password):
+
+            return JsonResponse(
+                {
+                    "success": False,
+                    "message": "Invalid username or password"
+                },
+                status=401
+            )
+
+        # -------------------------------------------------
+        # CHECK ACTIVE ACCOUNT
+        # -------------------------------------------------
+
+        if not user.is_active:
+
+            return JsonResponse(
+                {
+                    "success": False,
+                    "message": "This account is inactive"
+                },
+                status=403
+            )
+
+        # -------------------------------------------------
         # ADMIN LOGIN
         # -------------------------------------------------
 
         if role == "Admin":
 
             if not user.is_staff:
+
                 return JsonResponse(
                     {
                         "success": False,
@@ -132,6 +182,7 @@ def login_user(request):
         else:
 
             if user.is_staff:
+
                 return JsonResponse(
                     {
                         "success": False,
@@ -140,16 +191,26 @@ def login_user(request):
                     status=403
                 )
 
-        return JsonResponse({
-            "success": True,
-            "message": "Login successful",
-            "user": {
-                "id": user.id,
-                "username": user.username,
-                "email": user.email,
-                "role": "Admin" if user.is_staff else "Employee"
+        # -------------------------------------------------
+        # SUCCESS RESPONSE
+        # -------------------------------------------------
+
+        return JsonResponse(
+            {
+                "success": True,
+                "message": "Login successful",
+                "user": {
+                    "id": user.id,
+                    "username": user.username,
+                    "email": user.email,
+                    "role": (
+                        "Admin"
+                        if user.is_staff
+                        else "Employee"
+                    )
+                }
             }
-        })
+        )
 
     except json.JSONDecodeError:
 
@@ -201,6 +262,7 @@ def register_employee(request):
         # -------------------------------------------------
 
         if not username:
+
             return JsonResponse(
                 {
                     "success": False,
@@ -210,6 +272,7 @@ def register_employee(request):
             )
 
         if not email:
+
             return JsonResponse(
                 {
                     "success": False,
@@ -219,6 +282,7 @@ def register_employee(request):
             )
 
         if not password:
+
             return JsonResponse(
                 {
                     "success": False,
@@ -228,6 +292,7 @@ def register_employee(request):
             )
 
         if len(password) < 6:
+
             return JsonResponse(
                 {
                     "success": False,
@@ -266,8 +331,6 @@ def register_employee(request):
 
         # -------------------------------------------------
         # CREATE EMPLOYEE
-        # IMPORTANT:
-        # EMAIL IS SAVED HERE
         # -------------------------------------------------
 
         user = User.objects.create_user(
@@ -276,22 +339,23 @@ def register_employee(request):
             password=password
         )
 
-        # Employee should NOT be Admin
         user.is_staff = False
         user.is_superuser = False
 
         user.save()
 
-        return JsonResponse({
-            "success": True,
-            "message": "Employee registered successfully",
-            "user": {
-                "id": user.id,
-                "username": user.username,
-                "email": user.email,
-                "role": "Employee"
+        return JsonResponse(
+            {
+                "success": True,
+                "message": "Employee registered successfully",
+                "user": {
+                    "id": user.id,
+                    "username": user.username,
+                    "email": user.email,
+                    "role": "Employee"
+                }
             }
-        })
+        )
 
     except json.JSONDecodeError:
 
@@ -322,6 +386,7 @@ def register_employee(request):
 def predict_retention(request):
 
     if request.method != "POST":
+
         return JsonResponse(
             {
                 "success": False,
@@ -337,6 +402,7 @@ def predict_retention(request):
         model = get_ml_model()
 
         if model is None:
+
             return JsonResponse(
                 {
                     "success": False,
@@ -352,12 +418,14 @@ def predict_retention(request):
             ml_input
         )
 
-        return JsonResponse({
-            "success": True,
-            "attrition_prediction": prediction,
-            "attrition_probability": probability,
-            "retention_risk": risk
-        })
+        return JsonResponse(
+            {
+                "success": True,
+                "attrition_prediction": prediction,
+                "attrition_probability": probability,
+                "retention_risk": risk
+            }
+        )
 
     except Exception as e:
 
@@ -378,6 +446,7 @@ def predict_retention(request):
 def submit_feedback(request):
 
     if request.method != "POST":
+
         return JsonResponse(
             {
                 "success": False,
@@ -407,9 +476,14 @@ def submit_feedback(request):
             "feedback"
         ]
 
+        # -------------------------------------------------
+        # CHECK REQUIRED FIELDS
+        # -------------------------------------------------
+
         for field in required_fields:
 
             if field not in data:
+
                 return JsonResponse(
                     {
                         "success": False,
@@ -419,7 +493,7 @@ def submit_feedback(request):
                 )
 
         # -------------------------------------------------
-        # ML
+        # ML PREDICTION
         # -------------------------------------------------
 
         model = get_ml_model()
@@ -489,15 +563,16 @@ def submit_feedback(request):
         )
 
         # -------------------------------------------------
-        # IMPORTANT
-        # Employee response DOES NOT expose ML result
+        # EMPLOYEE DOES NOT RECEIVE ML RESULT
         # -------------------------------------------------
 
-        return JsonResponse({
-            "success": True,
-            "message": "Feedback submitted successfully",
-            "feedback_id": feedback.id
-        })
+        return JsonResponse(
+            {
+                "success": True,
+                "message": "Feedback submitted successfully",
+                "feedback_id": feedback.id
+            }
+        )
 
     except Exception as e:
 
@@ -518,6 +593,7 @@ def submit_feedback(request):
 def get_employees(request):
 
     if request.method != "GET":
+
         return JsonResponse(
             {
                 "success": False,
@@ -528,7 +604,10 @@ def get_employees(request):
 
     try:
 
-        # Only normal employees
+        # -------------------------------------------------
+        # ONLY NORMAL EMPLOYEES
+        # -------------------------------------------------
+
         users = User.objects.filter(
             is_staff=False
         ).order_by("-date_joined")
@@ -537,26 +616,28 @@ def get_employees(request):
 
         for user in users:
 
-            employee_list.append({
+            employee_list.append(
+                {
+                    "id": user.id,
+                    "username": user.username,
+                    "email": (
+                        user.email
+                        if user.email
+                        else "-"
+                    ),
+                    "joined_date": user.date_joined.strftime(
+                        "%Y-%m-%d %H:%M:%S"
+                    )
+                }
+            )
 
-                "id": user.id,
-
-                "username": user.username,
-
-                # IMPORTANT:
-                # Actual email from Django User table
-                "email": user.email if user.email else "-",
-
-                "joined_date": user.date_joined.strftime(
-                    "%Y-%m-%d %H:%M:%S"
-                )
-            })
-
-        return JsonResponse({
-            "success": True,
-            "count": len(employee_list),
-            "employees": employee_list
-        })
+        return JsonResponse(
+            {
+                "success": True,
+                "count": len(employee_list),
+                "employees": employee_list
+            }
+        )
 
     except Exception as e:
 
@@ -577,6 +658,7 @@ def get_employees(request):
 def get_feedbacks(request):
 
     if request.method != "GET":
+
         return JsonResponse(
             {
                 "success": False,
@@ -598,8 +680,7 @@ def get_feedbacks(request):
         for feedback in feedbacks:
 
             # -------------------------------------------------
-            # If old records don't have ML result,
-            # generate it now.
+            # GENERATE ML RESULT FOR OLD RECORDS
             # -------------------------------------------------
 
             if (
@@ -644,54 +725,43 @@ def get_feedbacks(request):
                         ]
                     )
 
-            feedback_list.append({
+            # -------------------------------------------------
+            # ADD FEEDBACK TO RESPONSE
+            # -------------------------------------------------
 
-                "id": feedback.id,
+            feedback_list.append(
+                {
+                    "id": feedback.id,
+                    "employee_name": feedback.employee_name,
+                    "age": feedback.age,
+                    "department": feedback.department,
+                    "job_role": feedback.job_role,
+                    "salary": feedback.salary,
+                    "years_at_company": feedback.years_at_company,
+                    "overtime": feedback.overtime,
+                    "job_satisfaction": feedback.job_satisfaction,
+                    "work_life_balance": feedback.work_life_balance,
+                    "promotion": feedback.promotion,
+                    "manager_support": feedback.manager_support,
+                    "salary_satisfaction": feedback.salary_satisfaction,
+                    "workload": feedback.workload,
+                    "feedback": feedback.feedback,
+                    "attrition_prediction": feedback.attrition_prediction,
+                    "attrition_probability": feedback.attrition_probability,
+                    "retention_risk": feedback.retention_risk,
+                    "created_at": feedback.created_at.strftime(
+                        "%Y-%m-%d %H:%M:%S"
+                    )
+                }
+            )
 
-                "employee_name": feedback.employee_name,
-
-                "age": feedback.age,
-
-                "department": feedback.department,
-
-                "job_role": feedback.job_role,
-
-                "salary": feedback.salary,
-
-                "years_at_company": feedback.years_at_company,
-
-                "overtime": feedback.overtime,
-
-                "job_satisfaction": feedback.job_satisfaction,
-
-                "work_life_balance": feedback.work_life_balance,
-
-                "promotion": feedback.promotion,
-
-                "manager_support": feedback.manager_support,
-
-                "salary_satisfaction": feedback.salary_satisfaction,
-
-                "workload": feedback.workload,
-
-                "feedback": feedback.feedback,
-
-                "attrition_prediction": feedback.attrition_prediction,
-
-                "attrition_probability": feedback.attrition_probability,
-
-                "retention_risk": feedback.retention_risk,
-
-                "created_at": feedback.created_at.strftime(
-                    "%Y-%m-%d %H:%M:%S"
-                )
-            })
-
-        return JsonResponse({
-            "success": True,
-            "count": len(feedback_list),
-            "feedbacks": feedback_list
-        })
+        return JsonResponse(
+            {
+                "success": True,
+                "count": len(feedback_list),
+                "feedbacks": feedback_list
+            }
+        )
 
     except Exception as e:
 
