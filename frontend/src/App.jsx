@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import "./App.css";
 
-const API = "/api";
+const API = "https://employee-retention-feedback-analytics.onrender.com/api";
 
 
 // ======================================================
