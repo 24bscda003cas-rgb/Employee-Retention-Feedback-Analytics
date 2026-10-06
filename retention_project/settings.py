@@ -1,13 +1,15 @@
 from pathlib import Path
 import os
+
 import dj_database_url
+
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-# --------------------------------------------------
+# =========================================================
 # SECURITY
-# --------------------------------------------------
+# =========================================================
 
 SECRET_KEY = os.getenv(
     "SECRET_KEY",
@@ -16,6 +18,7 @@ SECRET_KEY = os.getenv(
 
 DEBUG = os.getenv("DEBUG", "True").lower() == "true"
 
+
 ALLOWED_HOSTS = [
     "employee-retention-feedback-analytics.onrender.com",
     "localhost",
@@ -23,9 +26,9 @@ ALLOWED_HOSTS = [
 ]
 
 
-# --------------------------------------------------
-# INSTALLED APPS
-# --------------------------------------------------
+# =========================================================
+# APPLICATIONS
+# =========================================================
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -35,18 +38,25 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
 
-    # Project Apps
+    # Third-party
+    "corsheaders",
+
+    # Project apps
     "api",
     "employees",
 ]
 
 
-# --------------------------------------------------
+# =========================================================
 # MIDDLEWARE
-# --------------------------------------------------
+# =========================================================
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+
+    # CORS
+    "corsheaders.middleware.CorsMiddleware",
+
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -56,16 +66,18 @@ MIDDLEWARE = [
 ]
 
 
-# --------------------------------------------------
-# URL CONFIGURATION
-# --------------------------------------------------
+# =========================================================
+# URL / WSGI
+# =========================================================
 
 ROOT_URLCONF = "retention_project.urls"
 
+WSGI_APPLICATION = "retention_project.wsgi.application"
 
-# --------------------------------------------------
+
+# =========================================================
 # TEMPLATES
-# --------------------------------------------------
+# =========================================================
 
 TEMPLATES = [
     {
@@ -83,21 +95,9 @@ TEMPLATES = [
 ]
 
 
-# --------------------------------------------------
-# WSGI
-# --------------------------------------------------
-
-WSGI_APPLICATION = "retention_project.wsgi.application"
-
-
-# --------------------------------------------------
+# =========================================================
 # DATABASE
-# --------------------------------------------------
-# Local:
-#   Uses SQLite when DATABASE_URL is not available.
-#
-# Render:
-#   Uses PostgreSQL from DATABASE_URL.
+# =========================================================
 
 DATABASES = {
     "default": dj_database_url.config(
@@ -107,9 +107,9 @@ DATABASES = {
 }
 
 
-# --------------------------------------------------
+# =========================================================
 # PASSWORD VALIDATION
-# --------------------------------------------------
+# =========================================================
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -139,9 +139,9 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
-# --------------------------------------------------
-# LANGUAGE / TIME
-# --------------------------------------------------
+# =========================================================
+# INTERNATIONALIZATION
+# =========================================================
 
 LANGUAGE_CODE = "en-us"
 
@@ -152,17 +152,36 @@ USE_I18N = True
 USE_TZ = True
 
 
-# --------------------------------------------------
+# =========================================================
 # STATIC FILES
-# --------------------------------------------------
+# =========================================================
 
 STATIC_URL = "static/"
 
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
 
-# --------------------------------------------------
+# =========================================================
 # DEFAULT PRIMARY KEY
-# --------------------------------------------------
+# =========================================================
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+
+# =========================================================
+# CORS
+# =========================================================
+
+CORS_ALLOWED_ORIGINS = [
+    "https://employee-retention-feedback-analyti.vercel.app",
+]
+
+
+# =========================================================
+# CSRF
+# =========================================================
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://employee-retention-feedback-analyti.vercel.app",
+    "https://employee-retention-feedback-analytics.onrender.com",
+]
